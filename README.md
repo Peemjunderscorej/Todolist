@@ -20,6 +20,18 @@ You can start editing the page by modifying `app/page.tsx`. The page auto-update
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
+## Mock API (JSON Server)
+
+To run the mock backend server using json-server, make sure db.json exists in your project root.
+
+Start the JSON server with:
+
+```npm run api```
+
+It will run at http://localhost:3001.
+
+You can edit db.json to mock your own data.
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:
