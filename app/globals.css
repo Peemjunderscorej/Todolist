@@ -1,4 +1,6 @@
+@import '../node_modules/mini.css/dist/mini-default.min.css';
 @import "tailwindcss";
+
 
 :root {
   --background: #ffffff;
@@ -23,4 +25,42 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5); /* Dark background with opacity */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+}
+
+/* Modal content box */
+.modal {
+  background-color: white;
+  padding: 20px;
+  border-radius: 8px;
+  max-width: 500px;
+  width: 100%;
+  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Modal buttons */
+
+button:hover {
+  background-color: #0056b3;
+}
+
+/* Close button */
+button[type='button'] {
+  background-color: #dc3545;
+}
+
+button[type='button']:hover {
+  background-color: #c82333;
 }

@@ -1,103 +1,202 @@
-import Image from "next/image";
+"use client"
+import {useState, useEffect} from 'react'
+import Todolistlist from './Todolistlist'
+import { Todolist } from './Todolist'
+import TodolistAPI from './TodolistAPI'
+import ModalFormCreate from './createPopup'
+import ModalFormUpdate from './updatePopup'
 
-export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+export default function Home(){
+  const [name,setName] = useState("")
+  const [description,setDescription] = useState("")
+  const [status, setStatus] = useState("to-do")
+
+  const[todolist, setTodolist] = useState<Todolist>()
+  const[todolists, setTodolists] = useState<Todolist[]>([])
+
+  const[searchText, setSearchText] = useState("")
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isModalUpdateOpen, setIsModalUpdateOpen] = useState(false);
+  const [editTodoId, setEditTodoId] = useState<number | undefined>(undefined);
+
+  const openModal = () => {
+    setIsModalOpen(true);
+  };
+
+  // Function to close the modal
+  const closeModal = () => {
+      setName("")
+      setDescription("")
+      setStatus("")
+     
+    setIsModalOpen(false);
+    setIsModalUpdateOpen(false);
+    setEditTodoId(undefined); // Reset the edit ID when closing
+  };
+
+  const openEditModal = (id: number) => {
+    setEditTodoId(id); // Set the ID to edit
+    const todoToEdit = todolists.find((todo) => todo.id === id);
+    if (todoToEdit) {
+        setName(todoToEdit.name);
+        setDescription(todoToEdit.description);
+        setStatus(todoToEdit.status);
+        setIsModalUpdateOpen(true); // Open the update modal
+    }
+};
+
+
+
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+      e.preventDefault()
+
+      try{
+        const newTodo = {name, description, status}
+        
+        const data = await TodolistAPI.create(newTodo)
+        setTodolists([...todolists, data])
+      } catch(error){
+        console.log(error)
+      } finally {
+
+      }
+
+      setName("")
+      setDescription("")
+      setStatus("")
+      closeModal(); 
+  }
+
+  const handleEdit = async ( e: React.FormEvent<HTMLFormElement>, id: number | undefined) => {
+    e.preventDefault()
+
+    if (id === undefined) {
+      console.log("Invalid ID");
+      return; // Exit the function if ID is undefined
+    }
+    
+    try{
+        const newTodo = new Todolist(name, description, status, id)
+
+        const data = await TodolistAPI.update(id, newTodo)
+
+        setTodolists(prev => prev.map(todo => (todo.id === id ? data : todo)))
+    } catch(error) {
+      console.log(error)
+    } finally {
+      setName("")
+      setDescription("")
+      setStatus("")
+      closeModal(); 
+      closeModal();
+    }
+  }
+
+  const handleDelete = async ( id: number | undefined) => {
+   
+
+    try{
+      await TodolistAPI.remove(id)
+
+      setTodolists(prev => prev.filter(todo => todo.id !== id))
+    } catch(error) {
+        console.log(error)
+    } finally {
+
+    }
+  }
+
+  useEffect(() => {
+    const search = async () => {
+        try{
+          const data = await TodolistAPI.getAll(searchText)
+          setTodolists(data)
+        } catch(error) {
+          console.log(error)
+        } finally {
+
+        }
+    }
+
+    search()
+
+  }, [searchText])
+
+  useEffect(() => {
+
+    const fetchData = async () => {
+      
+      try {
+        const data = await TodolistAPI.getAll()
+        setTodolists(data)
+      } catch(error) {
+        console.log(error)
+      } finally {
+  
+      }
+    }
+
+    fetchData()
+    
+  },[])
+
+  return(
+    <>
+    <div>
+      <h1>Todo-List</h1>
     </div>
-  );
+    
+
+    <div className='container'>
+    <button onClick={openModal}>Add Todo</button> {/* Open the modal */}
+
+{/* Conditionally render the modal when isModalOpen is true */}
+{isModalOpen && (
+  <ModalFormCreate
+    name={name}
+    description={description}
+    status={status}
+    setName={setName}
+    setDescription={setDescription}
+    setStatus={setStatus}
+    handleSubmit={handleSubmit}
+    closeModal={closeModal}
+  />
+)}
+
+{isModalUpdateOpen && (
+          <ModalFormUpdate
+            name={name}
+            description={description}
+            status={status}
+            setName={setName}
+            setDescription={setDescription}
+            setStatus={setStatus}
+            handleSubmit={handleEdit}
+            closeModal={closeModal}
+            id={editTodoId} // Pass the correct ID for update
+          />
+        )}
+      
+
+      <div className='container'>
+          <form>
+            <label>
+              <strong>Search : </strong>
+              <input value={searchText} onChange = {e => setSearchText(e.target.value)}/>
+            </label>
+
+
+          </form>
+      </div>
+
+    </div>
+    <Todolistlist todolists={todolists} handleEdit={openEditModal} handleDelete={ handleDelete}/>
+    <div>
+
+    </div>
+    </>
+  )
 }
