@@ -1,12 +1,6 @@
 {
   "todolists": [
     {
-      "name": "TodoFix",
-      "description": "Todo",
-      "status": "done",
-      "id": 3
-    },
-    {
       "name": "Call mom",
       "description": "Check in with mom about her health",
       "status": "to-do",
@@ -41,6 +35,12 @@
       "description": "rwett",
       "status": "done",
       "id": 10
+    },
+    {
+      "name": "TestTodo10",
+      "description": "...",
+      "status": "done",
+      "id": 11
     }
   ]
 }

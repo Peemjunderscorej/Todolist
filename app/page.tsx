@@ -1,202 +1,154 @@
-"use client"
-import {useState, useEffect} from 'react'
-import Todolistlist from './Todolistlist'
-import { Todolist } from './Todolist'
-import TodolistAPI from './TodolistAPI'
-import ModalFormCreate from './createPopup'
-import ModalFormUpdate from './updatePopup'
+"use client";
 
+import { useState, useEffect } from "react";
+import Todolistlist from "./components/Todolistlist";
+import { Todolist } from "./Todolist";
+import TodolistAPI from "./TodolistAPI";
+import ModalFormCreate from "./createPopup";
+import ModalFormUpdate from "./components/updatePopup";
 
-export default function Home(){
-  const [name,setName] = useState("")
-  const [description,setDescription] = useState("")
-  const [status, setStatus] = useState("to-do")
+export default function Home() {
+  const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
+  const [status, setStatus] = useState("to-do");
 
-  const[todolist, setTodolist] = useState<Todolist>()
-  const[todolists, setTodolists] = useState<Todolist[]>([])
+  const [todolists, setTodolists] = useState<Todolist[]>([]);
+  const [searchText, setSearchText] = useState("");
 
-  const[searchText, setSearchText] = useState("")
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isModalUpdateOpen, setIsModalUpdateOpen] = useState(false);
-  const [editTodoId, setEditTodoId] = useState<number | undefined>(undefined);
+  const [editTodoId, setEditTodoId] = useState<number | undefined>();
 
-  const openModal = () => {
-    setIsModalOpen(true);
+  const resetForm = () => {
+    setName("");
+    setDescription("");
+    setStatus("to-do");
   };
 
-  // Function to close the modal
+  const openModal = () => setIsModalOpen(true);
   const closeModal = () => {
-      setName("")
-      setDescription("")
-      setStatus("")
-     
+    resetForm();
     setIsModalOpen(false);
     setIsModalUpdateOpen(false);
-    setEditTodoId(undefined); // Reset the edit ID when closing
+    setEditTodoId(undefined);
   };
 
   const openEditModal = (id: number) => {
-    setEditTodoId(id); // Set the ID to edit
-    const todoToEdit = todolists.find((todo) => todo.id === id);
-    if (todoToEdit) {
-        setName(todoToEdit.name);
-        setDescription(todoToEdit.description);
-        setStatus(todoToEdit.status);
-        setIsModalUpdateOpen(true); // Open the update modal
+    const todo = todolists.find((t) => t.id === id);
+    if (todo) {
+      setName(todo.name);
+      setDescription(todo.description);
+      setStatus(todo.status);
+      setEditTodoId(id);
+      setIsModalUpdateOpen(true);
     }
-};
+  };
 
-
-
-
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-      e.preventDefault()
-
-      try{
-        const newTodo = {name, description, status}
-        
-        const data = await TodolistAPI.create(newTodo)
-        setTodolists([...todolists, data])
-      } catch(error){
-        console.log(error)
-      } finally {
-
-      }
-
-      setName("")
-      setDescription("")
-      setStatus("")
-      closeModal(); 
-  }
-
-  const handleEdit = async ( e: React.FormEvent<HTMLFormElement>, id: number | undefined) => {
-    e.preventDefault()
-
-    if (id === undefined) {
-      console.log("Invalid ID");
-      return; // Exit the function if ID is undefined
-    }
-    
-    try{
-        const newTodo = new Todolist(name, description, status, id)
-
-        const data = await TodolistAPI.update(id, newTodo)
-
-        setTodolists(prev => prev.map(todo => (todo.id === id ? data : todo)))
-    } catch(error) {
-      console.log(error)
+  const handleCreate = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    try {
+      const newTodo = { name, description, status };
+      const created = await TodolistAPI.create(newTodo);
+      setTodolists((prev) => [...prev, created]);
+    } catch (error) {
+      console.error(error);
     } finally {
-      setName("")
-      setDescription("")
-      setStatus("")
-      closeModal(); 
       closeModal();
     }
-  }
+  };
 
-  const handleDelete = async ( id: number | undefined) => {
-   
-
-    try{
-      await TodolistAPI.remove(id)
-
-      setTodolists(prev => prev.filter(todo => todo.id !== id))
-    } catch(error) {
-        console.log(error)
+  const handleEdit = async (e: React.FormEvent<HTMLFormElement>, id?: number) => {
+    e.preventDefault();
+    if (!id) return;
+    try {
+      const updated = new Todolist(name, description, status, id);
+      const data = await TodolistAPI.update(id, updated);
+      setTodolists((prev) => prev.map((t) => (t.id === id ? data : t)));
+    } catch (error) {
+      console.error(error);
     } finally {
-
+      closeModal();
     }
-  }
+  };
+
+  const handleDelete = async (id?: number) => {
+    if (!id) return;
+    try {
+      await TodolistAPI.remove(id);
+      setTodolists((prev) => prev.filter((t) => t.id !== id));
+    } catch (error) {
+      console.error(error);
+    }
+  };
 
   useEffect(() => {
-    const search = async () => {
-        try{
-          const data = await TodolistAPI.getAll(searchText)
-          setTodolists(data)
-        } catch(error) {
-          console.log(error)
-        } finally {
-
-        }
-    }
-
-    search()
-
-  }, [searchText])
-
-  useEffect(() => {
-
     const fetchData = async () => {
-      
       try {
-        const data = await TodolistAPI.getAll()
-        setTodolists(data)
-      } catch(error) {
-        console.log(error)
-      } finally {
-  
+        const data = await TodolistAPI.getAll(searchText);
+        setTodolists(data);
+      } catch (error) {
+        console.error(error);
       }
-    }
+    };
+    fetchData();
+  }, [searchText]);
 
-    fetchData()
-    
-  },[])
+  useEffect(() => {
+    const init = async () => {
+      try {
+        const data = await TodolistAPI.getAll();
+        setTodolists(data);
+      } catch (error) {
+        console.error(error);
+      }
+    };
+    init();
+  }, []);
 
-  return(
-    <>
-    <div>
+  return (
+    <div className="container">
       <h1>Todo-List</h1>
+      <button onClick={openModal}>Add Todo</button>
+
+      {isModalOpen && (
+        <ModalFormCreate
+          name={name}
+          description={description}
+          status={status}
+          setName={setName}
+          setDescription={setDescription}
+          setStatus={setStatus}
+          handleSubmit={handleCreate}
+          closeModal={closeModal}
+        />
+      )}
+
+      {isModalUpdateOpen && (
+        <ModalFormUpdate
+          name={name}
+          description={description}
+          status={status}
+          setName={setName}
+          setDescription={setDescription}
+          setStatus={setStatus}
+          handleSubmit={(e) => handleEdit(e, editTodoId)}
+          closeModal={closeModal}
+          id={editTodoId}
+        />
+      )}
+
+      <form>
+        <label>
+          <strong>Search: </strong>
+          <input value={searchText} onChange={(e) => setSearchText(e.target.value)} />
+        </label>
+      </form>
+
+      <Todolistlist
+        todolists={todolists}
+        handleEdit={openEditModal}
+        handleDelete={handleDelete}
+      />
     </div>
-    
-
-    <div className='container'>
-    <button onClick={openModal}>Add Todo</button> {/* Open the modal */}
-
-{/* Conditionally render the modal when isModalOpen is true */}
-{isModalOpen && (
-  <ModalFormCreate
-    name={name}
-    description={description}
-    status={status}
-    setName={setName}
-    setDescription={setDescription}
-    setStatus={setStatus}
-    handleSubmit={handleSubmit}
-    closeModal={closeModal}
-  />
-)}
-
-{isModalUpdateOpen && (
-          <ModalFormUpdate
-            name={name}
-            description={description}
-            status={status}
-            setName={setName}
-            setDescription={setDescription}
-            setStatus={setStatus}
-            handleSubmit={handleEdit}
-            closeModal={closeModal}
-            id={editTodoId} // Pass the correct ID for update
-          />
-        )}
-      
-
-      <div className='container'>
-          <form>
-            <label>
-              <strong>Search : </strong>
-              <input value={searchText} onChange = {e => setSearchText(e.target.value)}/>
-            </label>
-
-
-          </form>
-      </div>
-
-    </div>
-    <Todolistlist todolists={todolists} handleEdit={openEditModal} handleDelete={ handleDelete}/>
-    <div>
-
-    </div>
-    </>
-  )
+  );
 }
